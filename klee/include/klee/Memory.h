@@ -246,6 +246,9 @@ public:
   const uint8_t *getConcreteStore(bool allowSymbolic = false) const;
   uint8_t *getConcreteStore(bool allowSymolic = false);
 
+  void print(llvm::raw_ostream &os);
+  void print_symbolic(llvm::raw_ostream &os);
+  void print();
 private:
   const UpdateList &getUpdates() const;
 
@@ -289,8 +292,6 @@ private:
   }
 
   void setKnownSymbolic(unsigned offset, Expr *value);
-
-  void print();
 };
   
 } // End klee namespace

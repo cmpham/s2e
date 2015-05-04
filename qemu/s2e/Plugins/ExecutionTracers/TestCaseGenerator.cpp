@@ -78,11 +78,15 @@ void TestCaseGenerator::onTestCaseGeneration(S2EExecutionState *state, const std
         return;
     }
 
-#if 0
-    foreach2(it, state.constraints.begin(), state.constraints.end()) {
-        s2e()->getMessagesStream() << "Constraint: " << std::hex << *it << '\n';
+// #if 0
+    foreach2(it, state->constraints.begin(), state->constraints.end()) {
+        s2e()->getMessagesStream() << "Constraint: " << *it << '\n';
     }
-#endif
+    // state->dumpCpuRegister(s2e()->getMessagesStream());
+    // state->dumpCpuRegister(s2e()->getMessagesStream());
+    // state->dumpCpuSystem(s2e()->getMessagesStream());
+    state->dumpAddressSpace(s2e()->getMessagesStream());
+// #endif
 
     s2e()->getMessagesStream() << '\n';
 

@@ -337,8 +337,32 @@ static inline void gen_op_andl_A0_ffff(void)
 #ifdef CONFIG_S2E
 static inline void gen_instr_end(DisasContext *s)
 {
-    if (!s->done_instr_end) {
-        s2e_on_translate_instruction_end(g_s2e, g_s2e_state, s->tb, s->insPc, s->useNextPc ? s->nextPc : (uint64_t)-1);
+  if (!s->done_instr_end) {
+        if (s->tb->s2e_codeBlock) {
+          struct HPerfCodeBlock* cb = s->tb->s2e_codeBlock;
+
+          if (cb->currentInstIndex < S2E_PERF_MAX_BLOCK_LENGTH) {
+
+            int ins_len = s->nextPc - s->insPc;
+            if (s->useNextPc) {
+              if (ins_len > S2E_PERF_MAX_INST_LENGTH) {
+                ins_len = S2E_PERF_MAX_INST_LENGTH;
+              }
+            } else {
+              ins_len = 1;
+            }
+
+            for (int i = 0; i < ins_len; ++i) {
+                cb->insts[cb->currentInstIndex].mem[i] = ldub_code(s->insPc + i);
+            }
+            cb->insts[cb->currentInstIndex].addr = (uint16_t)(s->insPc & S2E_PERF_ADDR_MASK);
+            cb->currentInstIndex++;
+          }
+        }
+
+        s2e_on_translate_instruction_end(g_s2e, g_s2e_state,
+                                         s->tb, s->insPc,
+                                         s->useNextPc ? s->nextPc : (uint64_t)-1);
         s->done_instr_end = 1;
     }
 }
@@ -7984,6 +8008,7 @@ static inline void gen_intermediate_code_internal(CPUX86State *env,
     tcg_gen_movi_i64(cpu_tmp1_i64, (uint64_t) tb);
     tcg_gen_st_i64(cpu_tmp1_i64, cpu_env, offsetof(CPUArchState, s2e_current_tb));
 
+    tb->s2e_codeBlock = NULL;
     s2e_on_translate_block_start(g_s2e, g_s2e_state, tb, pc_start);
 #endif
 

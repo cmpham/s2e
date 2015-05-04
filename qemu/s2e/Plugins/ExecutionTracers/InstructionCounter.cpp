@@ -80,6 +80,9 @@ void InstructionCounter::startCounter()
     m_executionDetector->onModuleTranslateBlockStart.connect(
             sigc::mem_fun(*this, &InstructionCounter::onTranslateBlockStart)
             );
+    m_executionDetector->onModuleTranslateBlockEnd.connect(
+            sigc::mem_fun(*this, &InstructionCounter::onTranslateBlockEnd)
+            );
 }
 
 
@@ -105,12 +108,34 @@ void InstructionCounter::onTranslateBlockStart(
             sigc::mem_fun(*this, &InstructionCounter::onTranslateInstructionStart)
     );
 
+    //Get the plugin state for the current path
+    DECLARE_PLUGINSTATE(InstructionCounterState, state);
+
+    // Enalbe block hash calculation
+    tb->s2e_codeBlock = (HPerfCodeBlock *)malloc(sizeof(HPerfCodeBlock));
+    memcpy(tb->s2e_codeBlock->insts, &plgState->m_bCount, sizeof(plgState->m_bCount));
+    tb->s2e_codeBlock->currentInstIndex = 1;
+    tb->s2e_codeBlock->startPc = pc;
+
     //This function will flush the number of executed instructions
     signal->connect(
         sigc::mem_fun(*this, &InstructionCounter::onTraceTb)
     );
 }
 
+void InstructionCounter::onTranslateBlockEnd(
+        ExecutionSignal *signal,
+        S2EExecutionState* state,
+        const ModuleDescriptor &module,
+        TranslationBlock *tb,
+        uint64_t insPc,
+        bool staticTarget,
+        uint64_t targetPc)
+{
+    signal->connect(
+        sigc::mem_fun(*this, &InstructionCounter::onTraceTbEnd)
+    );
+}
 
 void InstructionCounter::onTranslateInstructionStart(
         ExecutionSignal *signal,
@@ -144,6 +169,8 @@ void InstructionCounter::onModuleTranslateBlockEnd(
 {
     //TRACE("%"PRIx64" StaticTarget=%d TargetPc=%"PRIx64"\n", endPc, staticTarget, targetPc);
 
+    printf(">>>>>>>>>>> InstructionCounter::onModuleTranslateBlockEnd endPc=0x%lx, targetPc=0x%lx\n",
+         endPc, targetPc);
     //Done translating the blocks, no need to instrument anymore.
     m_tb = NULL;
     m_tbConnection.disconnect();
@@ -161,12 +188,52 @@ void InstructionCounter::onTraceTb(S2EExecutionState* state, uint64_t pc)
         return;
     }
 
+    plgState->m_bCount++;
+    printf(">>>>>>>>>>> InstructionCounter::onTraceTb icount=%ld, bcount=%ld, pc=0x%lx\n",
+           plgState->m_iCount,
+           plgState->m_bCount,
+           pc);
+
     //Flush the counter
     ExecutionTraceICount e;
     e.count = plgState->m_iCount;
     m_executionTracer->writeData(state, &e, sizeof(e), TRACE_ICOUNT);
+    ExecutionTraceTbCount tbCount;
+    tbCount.count = plgState->m_bCount;
+    m_executionTracer->writeData(state, &tbCount, sizeof(tbCount), TRACE_TBCOUNT);
 }
 
+void InstructionCounter::onTraceTbEnd(S2EExecutionState* state, uint64_t pc)
+{
+    //Get the plugin state for the current path
+    DECLARE_PLUGINSTATE(InstructionCounterState, state);
+
+    if (plgState->m_lastTbPc == pc) {
+        //Avoid repeateadly tracing tight loops.
+        return;
+    }
+
+    struct HPerfCodeBlock *cb = state->getTb()->s2e_codeBlock;
+    uint64_t blockIndex;
+    memcpy(&blockIndex, cb->insts, sizeof(blockIndex));
+    printf(">>>>>>>>>>> InstructionCounter::onTraceTbEnd icount=%ld, pc=0x%lx, currentInstIndex=%ld, blockId=%ld\n",
+           plgState->m_iCount,
+           pc,
+           cb->currentInstIndex,
+           blockIndex);
+    SHA1_CTX context;
+    ShaDigest digest;
+    char output[80];
+    SHA1_Init(&context);
+    uint64_t cbSize = sizeof(struct HPerfInstruction) * cb->currentInstIndex;
+    SHA1_Update(&context, (uint8_t*)cb->insts, cbSize);
+    SHA1_Final(&context, digest);
+    SHA1_xhash(plgState->m_xHash, digest);
+    digest_to_hex(digest, output);
+    printf("\t>>>>>>>>>>>> SHA1=%s returned\n", output);
+    digest_to_hex(plgState->m_xHash, output);
+    printf("\t>>>>>>>>>>>> XHash=%s returned\n", output);
+}
 
 void InstructionCounter::onTraceInstruction(S2EExecutionState* state, uint64_t pc)
 {
@@ -182,12 +249,16 @@ void InstructionCounter::onTraceInstruction(S2EExecutionState* state, uint64_t p
 InstructionCounterState::InstructionCounterState()
 {
     m_iCount = 0;
+    m_bCount = 0;
+    SHA1_initXHash(m_xHash);
     m_lastTbPc = 0;
 }
 
 InstructionCounterState::InstructionCounterState(S2EExecutionState *s, Plugin *p)
 {
     m_iCount = 0;
+    m_bCount = 0;
+    SHA1_initXHash(m_xHash);
     m_lastTbPc = 0;
 }
 

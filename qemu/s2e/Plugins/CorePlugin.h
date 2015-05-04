@@ -124,14 +124,14 @@ public:
     /** Signal that is emitted on beginning and end of code generation
         for each QEMU translation block.
     */
-    sigc::signal<void, ExecutionSignal*, 
+    sigc::signal<void, ExecutionSignal*,
             S2EExecutionState*,
             TranslationBlock*,
             uint64_t /* block PC */>
             onTranslateBlockStart;
 
     /** Signal that is emitted upon end of translation block */
-    sigc::signal<void, ExecutionSignal*, 
+    sigc::signal<void, ExecutionSignal*,
             S2EExecutionState*,
             TranslationBlock*,
             uint64_t /* ending instruction pc */,
@@ -139,7 +139,7 @@ public:
             uint64_t /* static target pc */>
             onTranslateBlockEnd;
 
-    
+
     /** Signal that is emitted on code generation for each instruction */
     sigc::signal<void, ExecutionSignal*,
             S2EExecutionState*,

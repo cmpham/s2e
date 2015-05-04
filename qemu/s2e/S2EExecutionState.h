@@ -448,6 +448,9 @@ public:
 
     /** Debug functions **/
     void dumpCpuState(llvm::raw_ostream &os) const;
+    void dumpCpuRegister(llvm::raw_ostream &os);
+    void dumpCpuSystem(llvm::raw_ostream &os);
+    void dumpAddressSpace(llvm::raw_ostream &os);
 
     /** Attempt to merge two states */
     bool merge(const ExecutionState &b);

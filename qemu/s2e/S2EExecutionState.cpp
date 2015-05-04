@@ -1665,6 +1665,28 @@ void S2EExecutionState::dumpCpuState(llvm::raw_ostream &os) const
 #endif
 }
 
+void S2EExecutionState::dumpAddressSpace(llvm::raw_ostream &os)
+{
+     os << "*******************\n";
+     os << "AddressSpace:\n";
+		 addressSpace.dump(os);
+}
+
+void S2EExecutionState::dumpCpuRegister(llvm::raw_ostream &os)
+{
+     os << "*******************\n";
+     os << "CpuRegisterObject:\n";
+     m_cpuRegistersObject->print_symbolic(os);
+}
+
+void S2EExecutionState::dumpCpuSystem(llvm::raw_ostream &os)
+{
+     os << "*******************\n";
+     os << "CpuSystemObject:\n";
+     m_cpuSystemObject->print_symbolic(os);
+     os << "*******************\n";
+}
+
 bool S2EExecutionState::merge(const ExecutionState &_b)
 {
     assert(dynamic_cast<const S2EExecutionState*>(&_b));

@@ -577,6 +577,44 @@ void ObjectState::write64(unsigned offset, uint64_t value) {
   }
 }
 
+void ObjectState::print_symbolic(llvm::raw_ostream &os) {
+  for (unsigned i=0; i<size; i++) {
+    if (!isByteConcrete(i)) {
+      os << "\tByte["<<i<<"]"
+                 << " concrete? " << isByteConcrete(i)
+                 << " known-sym? " << isByteKnownSymbolic(i)
+                 << " flushed? " << isByteFlushed(i) << " = ";
+      ref<Expr> e = read8(i);
+      os << e;
+      os << " -- From: MemoryObject ID: " << object->id << ";";
+      os << " Root Object: " << updates.root << ";";
+      os << " Size: " << size << "\n";
+    }
+  }
+}
+
+void ObjectState::print(llvm::raw_ostream &os) {
+  os << "-- ObjectState --\n";
+  os << "\tMemoryObject ID: " << object->id << "\n";
+  os << "\tRoot Object: " << updates.root << "\n";
+  os << "\tSize: " << size << "\n";
+
+  os << "\tBytes:\n";
+  for (unsigned i=0; i<size; i++) {
+    os << "\t\t["<<i<<"]"
+               << " concrete? " << isByteConcrete(i)
+               << " known-sym? " << isByteKnownSymbolic(i)
+               << " flushed? " << isByteFlushed(i) << " = ";
+    ref<Expr> e = read8(i);
+    os << e << "\n";
+  }
+
+  os << "\tUpdates:\n";
+  for (const UpdateNode *un=updates.head; un; un=un->next) {
+    os << "\t\t[" << un->index << "] = " << un->value << "\n";
+  }
+}
+
 void ObjectState::print() {
   std::cerr << "-- ObjectState --\n";
   std::cerr << "\tMemoryObject ID: " << object->id << "\n";

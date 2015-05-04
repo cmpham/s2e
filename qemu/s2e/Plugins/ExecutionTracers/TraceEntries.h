@@ -70,6 +70,7 @@ enum ExecTraceEntryType {
     TRACE_PAGEFAULT,
     TRACE_TLBMISS,
     TRACE_ICOUNT,
+    TRACE_TBCOUNT,
     TRACE_MEM_CHECKER,
     TRACE_EXCEPTION,
     TRACE_STATE_SWITCH,
@@ -330,12 +331,23 @@ struct ExecutionTraceTlbMiss
     uint8_t isWrite;
 }__attribute__((packed));
 
-struct ExecutionTraceICount
+struct ExecutionTraceTbCount
 {
-    //How many instructions where executed so far.
+    //How many TranslationBlock were executed so far.
     uint64_t count;
 }__attribute__((packed));
 
+ struct ExecutionTraceICount
+{
+    //How many instructions were executed so far.
+    uint64_t count;
+}__attribute__((packed));
+
+#include "Encrypt/sha1.h"
+struct ExecutionTraceXHash
+{
+    ShaDigest xhash;
+}__attribute__((packed));
 //XXX: Avoid hard-coded registers
 //XXX: Extend to other kinds of registers
 struct ExecutionTraceTb

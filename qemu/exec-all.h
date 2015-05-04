@@ -178,6 +178,26 @@ enum JumpType
 };
 #endif
 
+/* CPM: Perf */
+#ifdef CONFIG_S2E
+#define S2E_PERF_MAX_BLOCK_LENGTH 2048 /* Maximum of number of instructions, longer blocks will be cut-off  */
+#define S2E_PERF_MAX_INST_LENGTH 16 /* Length of an instruction in bytes */
+#define S2E_PERF_ADDR_MASK 0xFFFF
+
+struct HPerfInstruction {
+  uint16_t addr;
+  uint8_t mem[S2E_PERF_MAX_INST_LENGTH];
+};
+
+// We utilize the first HPerfInstruction to store the block index.
+// This helps with memory alignment in sha1 calculation.
+struct HPerfCodeBlock {
+  struct HPerfInstruction insts[S2E_PERF_MAX_BLOCK_LENGTH];
+  uint64_t startPc;
+  uint64_t currentInstIndex;
+};
+
+#endif /* of CONFIG_S2E -- defining Perf utilities*/
 
 struct TranslationBlock {
     target_ulong pc;   /* simulated PC corresponding to this block (EIP + CS base) */
@@ -230,6 +250,7 @@ struct TranslationBlock {
     enum ETranslationBlockType s2e_tb_type;
     struct S2ETranslationBlock* s2e_tb;
     struct TranslationBlock* s2e_tb_next[2];
+    struct HPerfCodeBlock *s2e_codeBlock;
     uint64_t pcOfLastInstr; /* XXX: hack for call instructions */
     uint32_t instruction_set;
 #endif

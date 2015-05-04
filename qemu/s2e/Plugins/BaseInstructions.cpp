@@ -623,6 +623,18 @@ void BaseInstructions::handleBuiltInOps(S2EExecutionState* state, uint64_t opcod
             s2e()->getExecutor()->queueStateForMerge(state);
             break;
 
+        case 0x60: /* profile_init */
+            break;
+
+        case 0x61: /* profile_stop */
+          break;
+
+        case 0x62: /* profile_block_begin */
+          break;
+
+        case 0x63: /* profile_block_end */
+          break;
+
         default:
             s2e()->getWarningsStream(state)
                 << "BaseInstructions: Invalid built-in opcode " << hexval(opcode) << '\n';

@@ -67,6 +67,7 @@ namespace klee {
                                       ObjectPair &result,
                                       bool *inBounds);
 
+    void dump(llvm::raw_ostream &os);
   public:
     AddressSpace(ExecutionState* _state) : cowKey(1), state(_state) {}
     AddressSpace(const AddressSpace &b) :

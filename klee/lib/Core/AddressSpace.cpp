@@ -157,6 +157,14 @@ bool AddressSpace::resolveOneFast(BitfieldSimplifier &simplifier,
     return true;
 }
 
+void AddressSpace::dump(llvm::raw_ostream &os) {
+  MemoryMap::iterator it = objects.begin();
+  for (; it != objects.end(); ++it) {
+    ObjectState *obj = it->second;
+    obj->print_symbolic(os);
+  }
+}
+
 bool AddressSpace::resolveOne(ExecutionState &state,
                               TimingSolver *solver,
                               ref<Expr> address,
