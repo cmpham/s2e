@@ -50,8 +50,6 @@ extern "C" {
 #include <iostream>
 #include <sstream>
 
-
-
 namespace s2e {
 namespace plugins {
 
@@ -221,17 +219,17 @@ void InstructionCounter::onTraceTbEnd(S2EExecutionState* state, uint64_t pc)
            pc,
            cb->currentInstIndex,
            blockIndex);
-    SHA1_CTX context;
-    ShaDigest digest;
+    ihash::SHA1_CTX context;
+    ihash::ShaDigest digest;
     char output[80];
-    SHA1_Init(&context);
+    ihash::SHA1_Init(&context);
     uint64_t cbSize = sizeof(struct HPerfInstruction) * cb->currentInstIndex;
-    SHA1_Update(&context, (uint8_t*)cb->insts, cbSize);
-    SHA1_Final(&context, digest);
-    SHA1_xhash(plgState->m_xHash, digest);
-    digest_to_hex(digest, output);
+    ihash::SHA1_Update(&context, (uint8_t*)cb->insts, cbSize);
+    ihash::SHA1_Final(&context, &digest);
+    ihash::SHA1_xhash(&plgState->m_xHash, &digest);
+    digest_to_hex(&digest, output);
     printf("\t>>>>>>>>>>>> SHA1=%s returned\n", output);
-    digest_to_hex(plgState->m_xHash, output);
+    digest_to_hex(&plgState->m_xHash, output);
     printf("\t>>>>>>>>>>>> XHash=%s returned\n", output);
 }
 
@@ -250,7 +248,7 @@ InstructionCounterState::InstructionCounterState()
 {
     m_iCount = 0;
     m_bCount = 0;
-    SHA1_initXHash(m_xHash);
+    ihash::SHA1_initXHash(&m_xHash);
     m_lastTbPc = 0;
 }
 
@@ -258,7 +256,7 @@ InstructionCounterState::InstructionCounterState(S2EExecutionState *s, Plugin *p
 {
     m_iCount = 0;
     m_bCount = 0;
-    SHA1_initXHash(m_xHash);
+    ihash::SHA1_initXHash(&m_xHash);
     m_lastTbPc = 0;
 }
 

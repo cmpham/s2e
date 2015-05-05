@@ -58,22 +58,33 @@ void InstructionCounter::onItem(unsigned traceIndex,
         const s2e::plugins::ExecutionTraceItemHeader &hdr,
         void *item)
 {
-    if (hdr.type != s2e::plugins::TRACE_ICOUNT) {
-        return;
+  switch (hdr.type) {
+    case s2e::plugins::TRACE_ICOUNT: {
+        // ExecutionTr
+        ExecutionTraceICount *e = static_cast<ExecutionTraceICount*>(item);
+        InstructionCounterState *state = static_cast<InstructionCounterState*>(m_events->getState(this, &InstructionCounterState::factory));
+
+        #ifdef DEBUG_PB
+        std::cout << "ID=" << traceIndex << " ICOUNT: e=" << e->count << " state=" << state->m_icount <<
+                    " item=" << item << std::endl;
+        #endif
+
+        assert(e->count >= state->m_icount);
+        state->m_icount = e->count;
+        break;
     }
 
-    ExecutionTraceICount *e = static_cast<ExecutionTraceICount*>(item);
-    InstructionCounterState *state = static_cast<InstructionCounterState*>(m_events->getState(this, &InstructionCounterState::factory));
+    case s2e::plugins::TRACE_TBCOUNT: {
+        ExecutionTraceXHash *xh = static_cast<ExecutionTraceXHash*>(item);
+        XHashState *stateXH = static_cast<XHashState*>(m_events->getState(this, &XHashState::factory));
 
-    #ifdef DEBUG_PB
-    std::cout << "ID=" << traceIndex << " ICOUNT: e=" << e->count << " state=" << state->m_icount <<
-                 " item=" << item << std::endl;
-    #endif
-
-    assert(e->count >= state->m_icount);
-    state->m_icount = e->count;
+        memcpy(&stateXH->m_xhash, &xh->xhash, sizeof(ihash::ShaDigest));
+        break;
+    }
+  }
 }
 
+/* InstructionCounterState */
 void InstructionCounterState::printCounter(std::ostream &os)
 {
     os << "Instruction count: " << std::dec << m_icount << std::endl;
@@ -97,6 +108,28 @@ InstructionCounterState::~InstructionCounterState()
 ItemProcessorState *InstructionCounterState::clone() const
 {
     return new InstructionCounterState(*this);
+}
+
+/* XHashState */
+void XHashState::printCounter(std::ostream &os)
+{
+    char output[80];
+    ihash::digest_to_hex(&m_xhash, output);
+    os << "XHash: " << std::dec << output << std::endl;
+}
+
+ItemProcessorState* XHashState::factory()
+{
+    return new XHashState();
+}
+
+XHashState::XHashState() {}
+
+XHashState::~XHashState() {}
+
+ItemProcessorState *XHashState::clone() const
+{
+    return new XHashState(*this);
 }
 
 }

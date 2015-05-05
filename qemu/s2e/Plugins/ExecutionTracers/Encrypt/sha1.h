@@ -5,6 +5,8 @@
 
 #include "Platform.h"
 
+namespace ihash {
+
 struct SHA1_CTX
 {
     uint32_t state[5];
@@ -20,10 +22,13 @@ struct ShaDigest {
 
 void SHA1_Init(SHA1_CTX* context);
 void SHA1_Update(SHA1_CTX* context, const uint8_t* data, const size_t len);
-void SHA1_Final(SHA1_CTX* context, ShaDigest digest);
+void SHA1_Final(SHA1_CTX* context, ShaDigest *digest);
 
 // digest1 = digest1 XOR digest2
-void SHA1_xhash(ShaDigest digest1, const ShaDigest digest2);
-void SHA1_initXHash(ShaDigest digest);
+void SHA1_xhash(ShaDigest *digest1, const ShaDigest *digest2);
 
-void digest_to_hex(const ShaDigest digest, char *output);
+void SHA1_initXHash(ShaDigest *digest);
+
+void digest_to_hex(const ShaDigest *digest, char *output);
+
+} // of namespace ihash

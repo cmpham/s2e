@@ -40,6 +40,7 @@
 #include <string.h>
 #include <string>
 #include <vector>
+#include "Encrypt/sha1.h"
 
 #undef EAX
 #undef EBX
@@ -343,10 +344,9 @@ struct ExecutionTraceTbCount
     uint64_t count;
 }__attribute__((packed));
 
-#include "Encrypt/sha1.h"
 struct ExecutionTraceXHash
 {
-    ShaDigest xhash;
+    ihash::ShaDigest xhash;
 }__attribute__((packed));
 //XXX: Avoid hard-coded registers
 //XXX: Extend to other kinds of registers

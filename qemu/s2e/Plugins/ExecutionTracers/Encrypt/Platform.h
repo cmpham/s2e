@@ -3,6 +3,8 @@
 
 #pragma once
 
+namespace ihash {
+
 void SetAffinity ( int cpu );
 
 //-----------------------------------------------------------------------------
@@ -92,3 +94,5 @@ __inline__ unsigned long long int rdtsc()
 #endif	//	!defined(_MSC_VER)
 
 //-----------------------------------------------------------------------------
+
+} // of namespace ihash

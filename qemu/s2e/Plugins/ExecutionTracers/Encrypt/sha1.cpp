@@ -82,6 +82,8 @@ A million repetitions of "a"
 
 #include "sha1.h"
 
+namespace ihash {
+
 #if defined(_MSC_VER)
 #pragma warning(disable : 4267)
 #pragma warning(disable : 4996)
@@ -206,7 +208,7 @@ void SHA1_Update(SHA1_CTX* context, const uint8_t* data, const size_t len)
 
 
 /* Add padding and return the message digest. */
-void SHA1_Final(SHA1_CTX* context, ShaDigest digest)
+void SHA1_Final(SHA1_CTX* context, ShaDigest *digest)
 {
     uint32_t i;
     uint8_t  finalcount[8];
@@ -221,7 +223,7 @@ void SHA1_Final(SHA1_CTX* context, ShaDigest digest)
     }
     SHA1_Update(context, finalcount, 8);  /* Should cause a SHA1_Transform() */
     for (i = 0; i < SHA1_DIGEST_SIZE; i++) {
-        digest.bytes[i] = (uint8_t)
+        digest->bytes[i] = (uint8_t)
          ((context->state[i>>2] >> ((3-(i & 3)) * 8) ) & 255);
     }
 
@@ -236,26 +238,26 @@ void SHA1_Final(SHA1_CTX* context, ShaDigest digest)
 //-----------------------------------------------------------------------------
 
 // digest1 = digest1 XOR digest2
-void SHA1_xhash(ShaDigest digest1, const ShaDigest digest2)
+void SHA1_xhash(ShaDigest *digest1, const ShaDigest *digest2)
 {
     for (int i = 0; i < SHA1_DIGEST_SIZE; i++) {
-      digest1.bytes[i] = digest1.bytes[i] ^ digest2.bytes[i];
+      digest1->bytes[i] = digest1->bytes[i] ^ digest2->bytes[i];
     }
 }
 
-void SHA1_initXHash(ShaDigest digest)
+void SHA1_initXHash(ShaDigest *digest)
 {
-  memset(digest.bytes, 0, sizeof(ShaDigest));
+  memset(digest->bytes, 0, sizeof(ShaDigest));
 }
 
-void digest_to_hex(const ShaDigest digest, char *output)
+void digest_to_hex(const ShaDigest *digest, char *output)
 {
     int i,j;
     char *c = output;
 
     for (i = 0; i < SHA1_DIGEST_SIZE/4; i++) {
         for (j = 0; j < 4; j++) {
-            sprintf(c,"%02X", digest.bytes[i*4+j]);
+            sprintf(c,"%02X", digest->bytes[i*4+j]);
             c += 2;
         }
         sprintf(c, " ");
@@ -285,7 +287,7 @@ int main(int argc, char** argv)
 {
     int k;
     SHA1_CTX context;
-    uint8_t digest[20];
+    ShaDigest digest;
     char output[80];
 
     fprintf(stdout, "verifying SHA-1 implementation... ");
@@ -293,7 +295,7 @@ int main(int argc, char** argv)
     for (k = 0; k < 2; k++){
         SHA1_Init(&context);
         SHA1_Update(&context, (uint8_t*)test_data[k], strlen(test_data[k]));
-        SHA1_Final(&context, digest);
+        SHA1_Final(&context, &digest);
   digest_to_hex(digest, output);
 
         if (strcmp(output, test_results[k])) {
@@ -323,3 +325,5 @@ int main(int argc, char** argv)
     return(0);
 }
 #endif /* TEST */
+
+} // of namespace ihash

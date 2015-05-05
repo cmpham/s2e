@@ -43,8 +43,8 @@
 #include <set>
 
 #include <s2e/Plugins/ModuleExecutionDetector.h>
-#include "ExecutionTracer.h"
 #include "Encrypt/sha1.h"
+#include "ExecutionTracer.h"
 
 namespace s2e {
 namespace plugins {
@@ -112,7 +112,7 @@ private:
     uint64_t m_iCount;
     uint64_t m_bCount;
     uint64_t m_lastTbPc;
-    ShaDigest m_xHash;
+    ihash::ShaDigest m_xHash;
 
 public:
 

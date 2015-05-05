@@ -37,6 +37,7 @@
 #define S2ETOOLS_EXECTRACER_ICOUNT_H
 
 #include <s2e/Plugins/ExecutionTracers/TraceEntries.h>
+#include <s2e/Plugins/ExecutionTracers/Encrypt/sha1.h>
 #include "LogParser.h"
 
 namespace s2etools {
@@ -82,6 +83,27 @@ public:
     friend class InstructionCounter;
 };
 
+class XHashState : public ItemProcessorState
+{
+private:
+
+    ihash::ShaDigest m_xhash;
+
+public:
+
+    XHashState();
+    virtual ~XHashState();
+
+    static ItemProcessorState *factory();
+    virtual ItemProcessorState *clone() const;
+
+    void printCounter(std::ostream &os);
+    ihash::ShaDigest getCount() const {
+        return m_xhash;
+    }
+
+    friend class InstructionCounter;
+};
 
 }
 #endif
