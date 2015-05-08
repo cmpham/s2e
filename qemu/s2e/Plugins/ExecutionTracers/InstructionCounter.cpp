@@ -196,9 +196,6 @@ void InstructionCounter::onTraceTb(S2EExecutionState* state, uint64_t pc)
     ExecutionTraceICount e;
     e.count = plgState->m_iCount;
     m_executionTracer->writeData(state, &e, sizeof(e), TRACE_ICOUNT);
-    ExecutionTraceTbCount tbCount;
-    tbCount.count = plgState->m_bCount;
-    m_executionTracer->writeData(state, &tbCount, sizeof(tbCount), TRACE_TBCOUNT);
 }
 
 void InstructionCounter::onTraceTbEnd(S2EExecutionState* state, uint64_t pc)
@@ -227,9 +224,15 @@ void InstructionCounter::onTraceTbEnd(S2EExecutionState* state, uint64_t pc)
     ihash::SHA1_Update(&context, (uint8_t*)cb->insts, cbSize);
     ihash::SHA1_Final(&context, &digest);
     ihash::SHA1_xhash(&plgState->m_xHash, &digest);
-    digest_to_hex(&digest, output);
+    ihash::digest_to_hex(&digest, output);
     printf("\t>>>>>>>>>>>> SHA1=%s returned\n", output);
-    digest_to_hex(&plgState->m_xHash, output);
+    // digest_to_hex(&plgState->xHash, output);
+    // printf("\t>>>>>>>>>>>> XHash=%s returned\n", output);
+
+    ExecutionTraceXHash xh;
+    memcpy(&xh.xHash, &plgState->m_xHash, sizeof(ihash::ShaDigest));
+    m_executionTracer->writeData(state, &xh, sizeof(xh), TRACE_XHASH);
+    ihash::digest_to_hex(&xh.xHash, output);
     printf("\t>>>>>>>>>>>> XHash=%s returned\n", output);
 }
 

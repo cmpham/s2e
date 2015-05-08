@@ -60,18 +60,19 @@ enum ExecTraceEntryType {
     TRACE_PROC_UNLOAD,
     TRACE_CALL,
     TRACE_RET,
-    TRACE_TB_START,
-    TRACE_TB_END,
-    TRACE_MODULE_DESC,
+    TRACE_TB_START,    // 5
+    TRACE_TB_END,      // 6
+    TRACE_MODULE_DESC, // 7
     TRACE_FORK,
     TRACE_CACHESIM,
-    TRACE_TESTCASE,
-    TRACE_BRANCHCOV,
-    TRACE_MEMORY,
-    TRACE_PAGEFAULT,
-    TRACE_TLBMISS,
-    TRACE_ICOUNT,
-    TRACE_TBCOUNT,
+    TRACE_TESTCASE, // a
+    TRACE_BRANCHCOV,// b
+    TRACE_MEMORY,   // c
+    TRACE_PAGEFAULT,// d
+    TRACE_TLBMISS,  // e
+    TRACE_ICOUNT,   // f
+    TRACE_TBCOUNT,  // 10
+    TRACE_XHASH,    // 11
     TRACE_MEM_CHECKER,
     TRACE_EXCEPTION,
     TRACE_STATE_SWITCH,
@@ -346,7 +347,7 @@ struct ExecutionTraceTbCount
 
 struct ExecutionTraceXHash
 {
-    ihash::ShaDigest xhash;
+    ihash::ShaDigest xHash;
 }__attribute__((packed));
 //XXX: Avoid hard-coded registers
 //XXX: Extend to other kinds of registers

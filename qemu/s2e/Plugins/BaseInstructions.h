@@ -51,12 +51,12 @@ public:
     BaseInstructions(S2E* s2e): Plugin(s2e) {}
 
     void initialize();
-   
-    void handleBuiltInOps(S2EExecutionState* state, 
+
+    void handleBuiltInOps(S2EExecutionState* state,
         uint64_t opcode);
 
 private:
-    void onCustomInstruction(S2EExecutionState* state, 
+    void onCustomInstruction(S2EExecutionState* state,
         uint64_t opcode);
     void invokePlugin(S2EExecutionState *state);
     void makeSymbolic(S2EExecutionState *state, bool makeConcolic);

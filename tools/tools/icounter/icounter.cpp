@@ -104,9 +104,6 @@ void InstructionCounterTool::onItem(unsigned traceIndex,
 
     const s2e::plugins::ExecutionTraceICount *te =
             (const s2e::plugins::ExecutionTraceICount*) item;
-
-
-
 }
 #endif
 

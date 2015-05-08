@@ -73,8 +73,6 @@ public:
     static ItemProcessorState *factory();
     virtual ItemProcessorState *clone() const;
 
-
-
     void printCounter(std::ostream &os);
     uint64_t getCount() const {
         return m_icount;
@@ -87,7 +85,7 @@ class XHashState : public ItemProcessorState
 {
 private:
 
-    ihash::ShaDigest m_xhash;
+    ihash::ShaDigest m_xHash;
 
 public:
 
@@ -99,7 +97,7 @@ public:
 
     void printCounter(std::ostream &os);
     ihash::ShaDigest getCount() const {
-        return m_xhash;
+        return m_xHash;
     }
 
     friend class InstructionCounter;

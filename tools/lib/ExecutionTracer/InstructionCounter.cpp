@@ -38,6 +38,8 @@
 #include <cassert>
 #include "InstructionCounter.h"
 
+#define DEBUG_PB
+
 using namespace s2e::plugins;
 
 namespace s2etools {
@@ -58,7 +60,7 @@ void InstructionCounter::onItem(unsigned traceIndex,
         const s2e::plugins::ExecutionTraceItemHeader &hdr,
         void *item)
 {
-  switch (hdr.type) {
+  switch ((int) hdr.type) {
     case s2e::plugins::TRACE_ICOUNT: {
         // ExecutionTr
         ExecutionTraceICount *e = static_cast<ExecutionTraceICount*>(item);
@@ -66,7 +68,7 @@ void InstructionCounter::onItem(unsigned traceIndex,
 
         #ifdef DEBUG_PB
         std::cout << "ID=" << traceIndex << " ICOUNT: e=" << e->count << " state=" << state->m_icount <<
-                    " item=" << item << std::endl;
+          " item=" << item << " type=" << (int) hdr.type << std::endl;
         #endif
 
         assert(e->count >= state->m_icount);
@@ -74,11 +76,17 @@ void InstructionCounter::onItem(unsigned traceIndex,
         break;
     }
 
-    case s2e::plugins::TRACE_TBCOUNT: {
+    case s2e::plugins::TRACE_XHASH: {
         ExecutionTraceXHash *xh = static_cast<ExecutionTraceXHash*>(item);
-        XHashState *stateXH = static_cast<XHashState*>(m_events->getState(this, &XHashState::factory));
 
-        memcpy(&stateXH->m_xhash, &xh->xhash, sizeof(ihash::ShaDigest));
+        // memcpy(&xHState->m_xHash, &xh->xHash, sizeof(ihash::ShaDigest));
+        #ifdef DEBUG_PB
+        std::cout << "ID=" << traceIndex << " item=" << item << std::endl;
+        static char output[80];
+        ihash::digest_to_hex(&xh->xHash, output);
+        std::cout << "XHash: " << std::dec << output << std::endl;
+        // xHState->printCounter(std::cout);
+        #endif
         break;
     }
   }
@@ -113,8 +121,8 @@ ItemProcessorState *InstructionCounterState::clone() const
 /* XHashState */
 void XHashState::printCounter(std::ostream &os)
 {
-    char output[80];
-    ihash::digest_to_hex(&m_xhash, output);
+    static char output[80];
+    ihash::digest_to_hex(&m_xHash, output);
     os << "XHash: " << std::dec << output << std::endl;
 }
 
