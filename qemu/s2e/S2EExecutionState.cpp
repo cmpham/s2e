@@ -2165,6 +2165,27 @@ void S2EExecutionState::addConstraint(klee::ref<klee::Expr> e)
     constraints.addConstraint(e);
 }
 
+  // CMP: perf functions
+  void S2EExecutionState::initPerf() {
+    m_perfActivated = true;
+  }
+
+  void S2EExecutionState::stopPerf() {
+    m_perfActivated = false;
+  }
+
+  void S2EExecutionState::profileBlockBegin() {
+    if (m_perfActivated) {
+      m_perfBlockActivated = true;
+    }
+  }
+
+  void S2EExecutionState::profileBlockStop() {
+    if (m_perfActivated) {
+      m_perfBlockActivated = false;
+    }
+  }
+
 } // namespace s2e
 
 /******************************/

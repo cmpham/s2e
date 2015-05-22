@@ -91,7 +91,7 @@ void InstructionCounter::startCounter()
  */
 void InstructionCounter::onTranslateBlockStart(
         ExecutionSignal *signal,
-        S2EExecutionState* state,
+        2EExecutionState* state,
         const ModuleDescriptor &module,
         TranslationBlock *tb,
         uint64_t pc)
@@ -198,6 +198,47 @@ void InstructionCounter::onTraceTb(S2EExecutionState* state, uint64_t pc)
     m_executionTracer->writeData(state, &e, sizeof(e), TRACE_ICOUNT);
 }
 
+void InstructionCounter::computeXHash(S2EExecutionState* state) {
+    DECLARE_PLUGINSTATE(InstructionCounterState, state);
+    struct HPerfCodeBlock *cb = state->getTb()->s2e_codeBlock;
+
+    uint64_t blockIndex;
+    ihash::SHA1_CTX context;
+    ihash::ShaDigest digest;
+
+    // Copy blockIndex to the first instruction slot.
+    memcpy(&blockIndex, cb->insts, sizeof(blockIndex));
+    printf(">>>>>>>>>>> InstructionCounter::onTraceTbEnd icount=%ld, pc=0x%lx, currentInstIndex=%ld, blockId=%ld\n",
+        plgState->m_iCount,
+        pc,
+        cb->currentInstIndex,
+        blockIndex);
+    ihash::SHA1_Init(&context);
+    uint64_t cbSize = sizeof(struct HPerfInstruction) * cb->currentInstIndex;
+    ihash::SHA1_Update(&context, (uint8_t*)cb->insts, cbSize);
+    ihash::SHA1_Final(&context, &digest);
+    ihash::SHA1_xhash(&plgState->m_xHash, &digest);
+
+    // For debuging
+    char output[80];
+    ihash::digest_to_hex(&digest, output);
+    printf("\t>>>>>>>>>>>> SHA1=%s returned\n", output);
+    // digest_to_hex(&plgState->xHash, output);
+    // printf("\t>>>>>>>>>>>> XHash=%s returned\n", output);
+}
+
+  void InstructionCounter::writeXHash(S2EExecutionState* state) {
+    DECLARE_PLUGINSTATE(InstructionCounterState, state);
+    ExecutionTraceXHash xh;
+    memcpy(&xh.xHash, &plgState->m_xHash, sizeof(ihash::ShaDigest));
+    m_executionTracer->writeData(state, &xh, sizeof(xh), TRACE_XHASH);
+
+    // For debuging
+    char output[80];
+    ihash::digest_to_hex(&xh.xHash, output);
+    printf("\t>>>>>>>>>>>> XHash=%s written\n", output);
+  }
+
 void InstructionCounter::onTraceTbEnd(S2EExecutionState* state, uint64_t pc)
 {
     //Get the plugin state for the current path
@@ -208,32 +249,23 @@ void InstructionCounter::onTraceTbEnd(S2EExecutionState* state, uint64_t pc)
         return;
     }
 
-    struct HPerfCodeBlock *cb = state->getTb()->s2e_codeBlock;
-    uint64_t blockIndex;
-    memcpy(&blockIndex, cb->insts, sizeof(blockIndex));
-    printf(">>>>>>>>>>> InstructionCounter::onTraceTbEnd icount=%ld, pc=0x%lx, currentInstIndex=%ld, blockId=%ld\n",
-           plgState->m_iCount,
-           pc,
-           cb->currentInstIndex,
-           blockIndex);
-    ihash::SHA1_CTX context;
-    ihash::ShaDigest digest;
-    char output[80];
-    ihash::SHA1_Init(&context);
-    uint64_t cbSize = sizeof(struct HPerfInstruction) * cb->currentInstIndex;
-    ihash::SHA1_Update(&context, (uint8_t*)cb->insts, cbSize);
-    ihash::SHA1_Final(&context, &digest);
-    ihash::SHA1_xhash(&plgState->m_xHash, &digest);
-    ihash::digest_to_hex(&digest, output);
-    printf("\t>>>>>>>>>>>> SHA1=%s returned\n", output);
-    // digest_to_hex(&plgState->xHash, output);
-    // printf("\t>>>>>>>>>>>> XHash=%s returned\n", output);
+    if (m_perfActivated) {
+      if (m_perfBlockActivated) {
+        if (!m_xhashReset) {
+            m_xhashReset = true;
+            ihash::SHA1_initXHash(&plgState->m_xHash);
+        }
 
-    ExecutionTraceXHash xh;
-    memcpy(&xh.xHash, &plgState->m_xHash, sizeof(ihash::ShaDigest));
-    m_executionTracer->writeData(state, &xh, sizeof(xh), TRACE_XHASH);
-    ihash::digest_to_hex(&xh.xHash, output);
-    printf("\t>>>>>>>>>>>> XHash=%s returned\n", output);
+        computeXHash(state);
+      } else {
+        if (m_xhashReset) {
+          // Need to write xhash
+          writeXHash(state);
+
+          m_xhashReset = false;
+        }
+      }
+    }
 }
 
 void InstructionCounter::onTraceInstruction(S2EExecutionState* state, uint64_t pc)

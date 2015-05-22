@@ -202,6 +202,9 @@ protected:
 
     std::string getUniqueVarName(const std::string &name);
 
+    // CPM: perf states
+    bool m_perfActivated;
+
 public:
     enum AddressType {
         VirtualAddress, PhysicalAddress, HostAddress
@@ -209,6 +212,12 @@ public:
 
     S2EExecutionState(klee::KFunction *kf);
     ~S2EExecutionState();
+
+    // CMP: perf functions
+    void initPerf();
+    void stopPerf();
+    void profileBlockBegin();
+    void profileBlockStop();
 
     int getID() const { return m_stateID; }
 

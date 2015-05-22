@@ -624,15 +624,19 @@ void BaseInstructions::handleBuiltInOps(S2EExecutionState* state, uint64_t opcod
             break;
 
         case 0x60: /* profile_init */
-            break;
+          state->initPerf();
+          break;
 
         case 0x61: /* profile_stop */
+          state->stopPerf();
           break;
 
         case 0x62: /* profile_block_begin */
+          state->profileBlockBegin();
           break;
 
         case 0x63: /* profile_block_end */
+          state->profileBlockEnd();
           break;
 
         default:
