@@ -104,6 +104,8 @@ private:
     void onTraceTb(S2EExecutionState* state, uint64_t pc);
     void onTraceTbEnd(S2EExecutionState* state, uint64_t pc);
     void onTraceInstruction(S2EExecutionState* state, uint64_t pc);
+    void computeXHash(S2EExecutionState* state);
+    void writeXHash(S2EExecutionState* state);
 };
 
 class InstructionCounterState: public PluginState

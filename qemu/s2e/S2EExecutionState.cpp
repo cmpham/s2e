@@ -2180,7 +2180,7 @@ void S2EExecutionState::addConstraint(klee::ref<klee::Expr> e)
     }
   }
 
-  void S2EExecutionState::profileBlockStop() {
+  void S2EExecutionState::profileBlockEnd() {
     if (m_perfActivated) {
       m_perfBlockActivated = false;
     }

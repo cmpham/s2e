@@ -52,7 +52,6 @@ private:
                 const s2e::plugins::ExecutionTraceItemHeader &hdr,
                 void *item);
 
-    void computeXHash(S2EExecutionState* state);
 public:
     InstructionCounter(LogEvents *events);
 

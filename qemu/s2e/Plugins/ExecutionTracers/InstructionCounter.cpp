@@ -91,7 +91,7 @@ void InstructionCounter::startCounter()
  */
 void InstructionCounter::onTranslateBlockStart(
         ExecutionSignal *signal,
-        2EExecutionState* state,
+        S2EExecutionState* state,
         const ModuleDescriptor &module,
         TranslationBlock *tb,
         uint64_t pc)
@@ -186,7 +186,6 @@ void InstructionCounter::onTraceTb(S2EExecutionState* state, uint64_t pc)
         return;
     }
 
-    plgState->m_bCount++;
     printf(">>>>>>>>>>> InstructionCounter::onTraceTb icount=%ld, bcount=%ld, pc=0x%lx\n",
            plgState->m_iCount,
            plgState->m_bCount,
@@ -208,9 +207,8 @@ void InstructionCounter::computeXHash(S2EExecutionState* state) {
 
     // Copy blockIndex to the first instruction slot.
     memcpy(&blockIndex, cb->insts, sizeof(blockIndex));
-    printf(">>>>>>>>>>> InstructionCounter::onTraceTbEnd icount=%ld, pc=0x%lx, currentInstIndex=%ld, blockId=%ld\n",
+    printf(">>>>>>>>>>> computeXHash(onTraceTbEnd) icount=%ld, currentInstIndex=%ld, blockId=%ld\n",
         plgState->m_iCount,
-        pc,
         cb->currentInstIndex,
         blockIndex);
     ihash::SHA1_Init(&context);
@@ -227,7 +225,7 @@ void InstructionCounter::computeXHash(S2EExecutionState* state) {
     // printf("\t>>>>>>>>>>>> XHash=%s returned\n", output);
 }
 
-  void InstructionCounter::writeXHash(S2EExecutionState* state) {
+void InstructionCounter::writeXHash(S2EExecutionState* state) {
     DECLARE_PLUGINSTATE(InstructionCounterState, state);
     ExecutionTraceXHash xh;
     memcpy(&xh.xHash, &plgState->m_xHash, sizeof(ihash::ShaDigest));
@@ -237,7 +235,7 @@ void InstructionCounter::computeXHash(S2EExecutionState* state) {
     char output[80];
     ihash::digest_to_hex(&xh.xHash, output);
     printf("\t>>>>>>>>>>>> XHash=%s written\n", output);
-  }
+}
 
 void InstructionCounter::onTraceTbEnd(S2EExecutionState* state, uint64_t pc)
 {
@@ -249,20 +247,22 @@ void InstructionCounter::onTraceTbEnd(S2EExecutionState* state, uint64_t pc)
         return;
     }
 
-    if (m_perfActivated) {
-      if (m_perfBlockActivated) {
-        if (!m_xhashReset) {
-            m_xhashReset = true;
-            ihash::SHA1_initXHash(&plgState->m_xHash);
+    if (state->m_perfActivated) {
+      if (state->m_perfBlockActivated) {
+        if (!state->m_xhashReset) {
+          state->m_xhashReset = true;
+          plgState->m_bCount = 0;
+          ihash::SHA1_initXHash(&plgState->m_xHash);
         }
 
-        computeXHash(state);
+        if (plgState->m_bCount) computeXHash(state);
+        plgState->m_bCount++;
       } else {
-        if (m_xhashReset) {
+        if (state->m_xhashReset) {
           // Need to write xhash
           writeXHash(state);
 
-          m_xhashReset = false;
+          state->m_xhashReset = false;
         }
       }
     }
